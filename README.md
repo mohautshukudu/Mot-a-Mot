@@ -18,6 +18,8 @@ A free, no-account web app for learning the ~2,000 most common French words, ran
 
   You need your pass mark (80% by default, right first time) on all three levels to unlock the next batch. Anything you miss comes back in the same test until you get it right.
 - **Review.** Finished words come back on a spaced schedule: 1, 3, 7, 14, 30, 60 and then 120 days.
+- **Word forms.** Example sentences highlight the word, and when it appears in a changed form (suis for être, chiens for chien) the app says which form it is. Tap the ? for a short grammar primer.
+- **Read.** The Read tab pulls a random French Wikipedia article, highlights the words you've learned, and tells you what share of the passage you know. Tap any highlighted word for its meaning and pronunciation.
 - **Already know some French?** Go to Settings → "Already know some French?" to skip ahead.
 - **Progress** is saved in your browser. Settings → Backup gives you a code you can use to move your progress to another device.
 
@@ -35,7 +37,7 @@ To update the app later, upload the new files to the repo again. Your progress i
 
 Pronunciation uses your device's built-in French voice, so it's free and there's no API.
 
-- **iPhone:** Settings → Accessibility → Spoken Content → Voices → French. The "Enhanced" voices sound best.
+- **iPhone:** Settings → General → Read & Speak → Voices → French. Download a French (France) voice (the "Enhanced" and "Premium" ones sound best), then fully close the app and reopen it.
 - **Android:** Settings → Text-to-speech → install French.
 
 ## Credits

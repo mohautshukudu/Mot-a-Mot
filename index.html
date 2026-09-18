@@ -125,6 +125,20 @@ p{margin:0}
 .en{font-size:1.25rem;font-weight:700}
 .example{border-top:1px dashed var(--rule-strong);padding-top:12px;width:100%;display:flex;gap:10px;align-items:center;text-align:left}
 .example .ex-fr{font-family:var(--f-word);font-size:1.08rem}
+mark{background:var(--pen-soft);color:var(--ink);border-radius:4px;padding:0 3px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.feedback mark{background:rgba(127,127,127,.18);color:inherit}
+.form-note{font-size:.82rem;color:var(--muted);margin-top:2px}
+.form-note b{color:var(--ink);font-family:var(--f-word);font-weight:400}
+.whybtn{border:1px solid var(--rule-strong);background:var(--card);color:var(--muted);width:20px;height:20px;border-radius:50%;font-size:.7rem;line-height:1;padding:0;vertical-align:middle}
+/* reading */
+.article{font-family:var(--f-word);font-size:1.12rem;line-height:1.85}
+.article .tok{border:0;background:transparent;padding:0 1px;font:inherit;color:inherit;border-radius:4px}
+.article .tok.known{background:var(--good-soft);color:var(--good)}
+.article .tok.current{background:var(--pen-soft);color:var(--pen)}
+.article .tok.soon{border-bottom:1.5px dotted var(--faint)}
+.article-img{width:100%;max-height:200px;object-fit:cover;border-radius:12px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.78rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
 .reveal{border:1px dashed var(--rule-strong);border-radius:10px;padding:10px 16px;background:transparent;color:var(--muted);width:100%}
 /* quiz */
 .qhead{display:flex;align-items:center;gap:12px;margin-bottom:12px}
@@ -181,7 +195,7 @@ p{margin:0}
 .switch input{width:22px;height:22px;accent-color:var(--pen)}
 /* tab bar */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--card);border-top:1px solid var(--rule-strong);padding-bottom:env(safe-area-inset-bottom,0px)}
-.tabs nav{max-width:600px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
+.tabs nav{max-width:600px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
 .tabs button{border:0;background:transparent;padding:10px 4px 12px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.76rem;color:var(--muted)}
 .tabs button svg{width:22px;height:22px}
 .tabs button[aria-current="page"]{color:var(--pen);font-weight:700}
@@ -207,6 +221,7 @@ p{margin:0}
 </div>
 <div class="tabs" id="tabs"><nav>
   <button data-action="tab" data-tab="home" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-1.5Z"/><path d="M8 7h6M8 11h6"/></svg>Learn</button>
+  <button data-action="tab" data-tab="read"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7c-1.5-1.3-3.5-2-6-2H3v13h3c2.5 0 4.5.7 6 2 1.5-1.3 3.5-2 6-2h3V5h-3c-2.5 0-4.5.7-6 2Z"/><path d="M12 7v13"/></svg>Read</button>
   <button data-action="tab" data-tab="words"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Words</button>
   <button data-action="tab" data-tab="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>Settings</button>
 </nav></div>
@@ -222,7 +237,7 @@ let study=null;            // {ids, i, hide}
 let quiz=null;             // session
 let wordsUI={q:"",filter:"all",limit:120};
 /* ---------- data ---------- */
-const WORDS = (window.WORDS||[]).map((a,i)=>({id:i,fr:a[0],g:a[1],pos:a[2],en:a[3],emoji:a[4],exFr:a[5],exEn:a[6]}));
+const WORDS = (window.WORDS||[]).map((a,i)=>({id:i,fr:a[0],g:a[1],pos:a[2],en:a[3],emoji:a[4],exFr:a[5],exEn:a[6],hl:a[7]&&a[7].length?a[7]:null,nf:a[8]||""}));
 const TOTAL = WORDS.length;
 const PLURAL = new Set(["gens","toilettes","vacances","lunettes","pâtes","félicitations"]);
 const H_ASPIRE = new Set(["haine","hasard","héros","honte","hâte","haut"]);
@@ -336,20 +351,54 @@ function bumpStreak(){
 /* ---------- speech ---------- */
 const synth = window.speechSynthesis;
 let frVoices=[];
-function loadVoices(){ if(!synth) return; frVoices=synth.getVoices().filter(v=>/^fr/i.test(v.lang)); frVoices.sort((a,b)=>(b.lang==="fr-FR")-(a.lang==="fr-FR")); if(view==="settings") render(); }
-if(synth){ loadVoices(); synth.onvoiceschanged=loadVoices; }
-function hasFrench(){ return !!synth && frVoices.length>0; }
+let allVoiceCount=0, booted=false;
+function voiceKey(v){ return (v.name||"")+"|"+(v.lang||""); }
+function loadVoices(){
+  if(!synth) return;
+  let list=[]; try{ list=synth.getVoices()||[]; }catch(e){}
+  const before=frVoices.length+"/"+allVoiceCount;
+  allVoiceCount=list.length;
+  const fr=list.filter(v=>/^fr/i.test(String(v.lang||"").replace("_","-")));
+  const seen=new Set(); frVoices=[];
+  for(const v of fr){ const k=voiceKey(v); if(seen.has(k)) continue; seen.add(k); frVoices.push(v); }
+  const rank=v=>(/fr-FR/i.test(String(v.lang).replace("_","-"))?4:0)+(/premium|siri/i.test(v.name)?2:0)+(/enhanced|amélior/i.test(v.name)?1:0);
+  frVoices.sort((a,b)=>rank(b)-rank(a));
+  // migrate a setting saved as a voiceURI to the name|lang key
+  if(S.settings.voice && !frVoices.some(v=>voiceKey(v)===S.settings.voice)){
+    const m=fr.find(v=>v.voiceURI===S.settings.voice);
+    if(m){ S.settings.voice=voiceKey(m); persist(); }
+  }
+  if(booted && before!==frVoices.length+"/"+allVoiceCount && (view==="settings"||view==="home")) render();
+}
+if(synth){
+  loadVoices();
+  try{ synth.addEventListener("voiceschanged",loadVoices); }catch(e){ synth.onvoiceschanged=loadVoices; }
+  // iOS Safari often returns an empty list at first and never fires voiceschanged: keep asking for a while
+  let tries=0; const iv=setInterval(()=>{ loadVoices(); if((frVoices.length&&tries>8)||++tries>60) clearInterval(iv); },500);
+  document.addEventListener("pointerdown",loadVoices,{passive:true});
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden) loadVoices(); });
+}
+// If the device lists no voices at all, it may still speak French with its default voice, so don't block.
+function hasFrench(){ return !!synth && (frVoices.length>0 || allVoiceCount===0); }
+function chosenVoice(){
+  if(!frVoices.length) return null;
+  return frVoices.find(v=>voiceKey(v)===S.settings.voice) || frVoices[0];
+}
 function speak(text,slow){
   if(!synth) return;
-  try{
-    synth.cancel();
-    const u=new SpeechSynthesisUtterance(text);
-    u.lang="fr-FR";
-    const v=frVoices.find(x=>x.voiceURI===S.settings.voice)||frVoices[0];
-    if(v) u.voice=v;
-    u.rate=(slow?0.6:1)*S.settings.rate;
-    synth.speak(u);
-  }catch(e){}
+  try{ synth.cancel(); }catch(e){}
+  // Safari drops an utterance queued in the same tick as cancel()
+  setTimeout(()=>{
+    try{
+      const u=new SpeechSynthesisUtterance(text);
+      const v=chosenVoice();
+      u.lang = v ? v.lang : "fr-FR";
+      try{ if(v) u.voice=v; }catch(e){}
+      u.rate=(slow?0.6:1)*S.settings.rate;
+      synth.speak(u);
+      if(synth.paused) synth.resume();
+    }catch(e){}
+  },60);
 }
 function sayWord(w,slow){ speak((article(w)+w.fr).replace("l'","l'"),slow); }
 
@@ -396,6 +445,23 @@ function frHTML(w){
   const a=article(w);
   return `<p class="fr ${w.g==="m"?"m":w.g==="f"?"f":""}" lang="fr">${a?`<span class="art">${esc(a)}</span>`:""}${esc(w.fr)}</p>`;
 }
+
+function normForm(x){ return String(x).toLowerCase().replace(/œ/g,"oe").replace(/[’]/g,"'"); }
+function formNoteHTML(w){
+  if(!w.hl) return "";
+  const form=w.exFr.slice(w.hl[0],w.hl[1]);
+  if(normForm(form)===normForm(w.fr)) return "";
+  return `<p class="form-note"><b lang="fr">${esc(form.toLowerCase())}</b> is a form of <b lang="fr">${esc(w.fr)}</b>${w.nf?` — ${esc(w.nf)}`:""} <button class="whybtn" data-action="whyform" aria-label="Why does the word change?">?</button></p>`;
+}
+function exampleHTML(w,opts){
+  opts=opts||{};
+  if(!w.hl) return `<p class="ex-fr" lang="fr">${esc(w.exFr)}</p>`;
+  const a=w.hl[0], b=w.hl[1], form=w.exFr.slice(a,b);
+  const html=`<p class="ex-fr" lang="fr">${esc(w.exFr.slice(0,a))}<mark>${esc(form)}</mark>${esc(w.exFr.slice(b))}</p>`;
+  const changed=normForm(form)!==normForm(w.fr);
+  const note=(changed&&!opts.noNote)?`<p class="form-note"><b lang="fr">${esc(form.toLowerCase())}</b> is a form of <b lang="fr">${esc(w.fr)}</b></p>`:"";
+  return html+note;
+}
 function chipsHTML(w){
   const g=genderLabel(w);
   return `<div class="row" style="justify-content:center">${g?`<span class="chip ${w.g==="m"?"m":w.g==="f"?"f":""}">${g}</span>`:""}<span class="chip plain">${esc(w.pos)}</span><span class="chip plain">#${w.id+1}</span></div>`;
@@ -424,6 +490,7 @@ function render(){
   else if(view==="study") renderStudy();
   else if(view==="quiz") renderQuiz();
   else if(view==="result") renderResult();
+  else if(view==="read") renderRead();
   else if(view==="words") renderWords();
   else if(view==="settings") renderSettings();
 }
@@ -468,7 +535,7 @@ function renderHome(){
   if(done.length){
     html+=`<h3>Finished batches</h3><section class="card batch-list" style="padding:6px 16px">${done.map(x=>`<div class="bl"><span>Batch ${x.n} · words ${x.start+1}–${x.start+x.size}</span><span class="muted">${batchAvg(x)??"–"}% first try</span></div>`).join("")}</section>`;
   }
-  if(!hasFrench()) html+=`<p class="notice">No French voice found in this browser, so the Listen level can't play audio. On iPhone, add one in Settings → Accessibility → Spoken Content → Voices → French. You can still skip the Listen level when you reach it.</p>`;
+  if(!hasFrench()) html+=`<p class="notice">No French voice found in this browser, so the Listen level can't play audio. On iPhone, add one in Settings → General → Read &amp; Speak → Voices → French, then fully close and reopen this app. You can still skip the Listen level when you reach it.</p>`;
   html+=`</div>`;
   $app.innerHTML=html;
 }
@@ -492,7 +559,7 @@ function wordCardHTML(w,{hide=false,revealed=true}={}){
     <div class="row" style="justify-content:center"><button class="icon-btn" data-action="say" data-id="${w.id}" aria-label="Hear the word">${ICON_SPEAK}</button><button class="icon-btn" data-action="say" data-slow="1" data-id="${w.id}" aria-label="Hear it slowly">${ICON_SLOW}</button></div>
     ${showMeaning?`<p class="en">${esc(w.en)}</p>`:`<button class="reveal" data-action="reveal">Tap to show the meaning</button>`}
     <div class="example"><button class="icon-btn" data-action="sayex" data-id="${w.id}" aria-label="Hear the example">${ICON_SPEAK}</button>
-      <div><p class="ex-fr" lang="fr">${esc(w.exFr)}</p>${showMeaning?`<p class="muted small">${esc(w.exEn)}</p>`:""}</div></div>
+      <div>${exampleHTML(w,{noNote:true})}${showMeaning?`<p class="muted small">${esc(w.exEn)}</p>`:""}${formNoteHTML(w)}</div></div>
   </div>`;
 }
 function renderStudy(){
@@ -547,7 +614,7 @@ function buildOptions(item){
 function renderQuiz(){
   if(quiz.type==="nolisten"){
     $app.innerHTML=`<div class="card stack"><h2>No French voice on this device</h2>
-    <p class="muted">The Listen level needs your browser's French text-to-speech voice. On iPhone: Settings → Accessibility → Spoken Content → Voices → French. On Android: Settings → Text-to-speech → install French. Chrome on a laptop usually has one built in.</p>
+    <p class="muted">The Listen level needs your browser's French text-to-speech voice. On iPhone: Settings → General → Read &amp; Speak → Voices → French, then fully close and reopen this app. On Android: Settings → Text-to-speech → install French. Chrome on a laptop usually has one built in.</p>
     <div class="btn-row"><button class="btn" data-action="home">Back</button><button class="btn primary" data-action="skiplisten">Skip Listen for this batch</button></div></div>`;
     return;
   }
@@ -589,7 +656,7 @@ function renderQuiz(){
   }
   let fb="";
   if(a){
-    const exBlock=`<p class="fb-body"><span lang="fr" style="font-family:var(--f-word)">${esc(article(w)+w.fr)}</span> — ${esc(w.en)}</p><p class="fb-body small" lang="fr">${esc(w.exFr)}</p>`;
+    const exBlock=`<p class="fb-body"><span lang="fr" style="font-family:var(--f-word)">${esc(article(w)+w.fr)}</span> — ${esc(w.en)}</p><div class="fb-body small">${exampleHTML(w)}</div>`;
     fb=`<div class="feedback ${a.ok?"good":"bad"} pop"><span class="hand">${a.ok?pickPraise():"Pas tout à fait…"}</span>${a.note?`<p class="fb-body small"><b>${esc(a.note)}</b></p>`:""}${exBlock}</div>
       <button class="btn primary wide" data-action="continue" id="continue-btn">Continue</button>`;
   }
@@ -673,6 +740,78 @@ function renderResult(){
   </div>`;
 }
 
+
+/* ---------- reading (French Wikipedia) ---------- */
+const READ_KEY="motamot-read-v1";
+let reading=load(READ_KEY,null), readBusy=false, FORMS=null;
+function formsIndex(){
+  if(FORMS) return FORMS;
+  FORMS=new Map();
+  const raw=(window.FORMS_INDEX||"");
+  for(const pair of raw.split(" ")){
+    const c=pair.lastIndexOf(":"); if(c<1) continue;
+    FORMS.set(pair.slice(0,c), +pair.slice(c+1));
+  }
+  return FORMS;
+}
+function lookupForm(tok){
+  const m=formsIndex(); const t=normForm(tok);
+  if(m.has(t)) return m.get(t);
+  const bare=t.replace(/^(l|d|j|n|m|t|s|c|qu)'/,"");
+  return m.has(bare)?m.get(bare):-1;
+}
+async function loadArticle(force){
+  if(readBusy) return; readBusy=true; render();
+  try{
+    const r=await fetch("https://fr.wikipedia.org/api/rest_v1/page/random/summary",{headers:{accept:"application/json"}});
+    if(!r.ok) throw new Error("http "+r.status);
+    const j=await r.json();
+    let extract=(j.extract||"").trim();
+    if(extract.length>700) extract=extract.slice(0,700).replace(/\s+\S*$/,"")+" …";
+    if(extract.split(/\s+/).length<12 && !force) { readBusy=false; return loadArticle(true); }
+    reading={title:j.title||"", extract, img:(j.thumbnail&&j.thumbnail.source)||"", url:(j.content_urls&&j.content_urls.desktop&&j.content_urls.desktop.page)||"", at:Date.now()};
+    save(READ_KEY,reading); readErr="";
+  }catch(e){ readErr="Couldn't reach Wikipedia just now. Check your connection and try again."; }
+  readBusy=false; render();
+}
+let readErr="";
+function renderRead(){
+  if(!reading && !readBusy && !readErr){ loadArticle(); }
+  let body="";
+  if(reading){
+    const words=[]; let known=0, inList=0;
+    const html=reading.extract.replace(/[A-Za-zÀ-ÿŒœ]+(?:['’-][A-Za-zÀ-ÿŒœ]+)*/g, tok=>{
+      const id=lookupForm(tok);
+      if(id<0) return esc(tok);
+      inList++;
+      const w=WORDS[id]; const st=wordStatus(w);
+      const cls=(st==="learned"||st==="due")?"known":st==="current"?"current":"soon";
+      if(cls==="known") known++;
+      return `<button class="tok ${cls}" data-action="readtok" data-id="${id}" title="${esc(w.fr)} — ${esc(w.en)}">${esc(tok)}</button>`;
+    });
+    const pct=inList?Math.round(known/inList*100):0;
+    body=`<section class="card lift stack">
+      ${reading.img?`<img class="article-img" src="${esc(reading.img)}" alt="" loading="lazy" onerror="this.remove()">`:""}
+      <h2 lang="fr">${esc(reading.title)}</h2>
+      <p class="article" lang="fr">${html}</p>
+      <div class="row"><button class="icon-btn" data-action="readaloud" aria-label="Read the passage aloud">${ICON_SPEAK}</button>
+        ${reading.url?`<a class="btn ghost" href="${esc(reading.url)}" target="_blank" rel="noopener">Full article</a>`:""}</div>
+    </section>
+    <section class="card stack">
+      <div class="row spread"><p><b>${pct}%</b> of this passage is vocabulary you've learned</p><span class="chip">${known}/${inList}</span></div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <div class="legend"><span><i style="background:var(--good)"></i>learned</span><span><i style="background:var(--pen)"></i>this batch</span><span><i style="background:var(--faint)"></i>later in the list</span><span><i style="background:var(--rule-strong)"></i>beyond the 2,000</span></div>
+      <p class="muted small">Tap any coloured word to see what it means and hear it.</p>
+    </section>`;
+  }
+  $app.innerHTML=`<div class="stack">
+    <div class="row spread"><h2>Reading</h2><button class="btn ${reading?"":"primary"}" data-action="readnew" ${readBusy?"disabled":""}>${readBusy?"Loading…":"New article"}</button></div>
+    <p class="muted small">A random article from French Wikipedia. Real French, written for French readers — don't expect to understand all of it yet.</p>
+    ${readErr?`<p class="notice">${esc(readErr)}</p>`:""}
+    ${body||(readBusy?`<p class="muted">Fetching an article…</p>`:"")}
+  </div>`;
+}
+
 /* ---------- words list ---------- */
 function renderWords(){
   const q=norm(wordsUI.q);
@@ -689,6 +828,24 @@ function renderWords(){
     ${list.length>shown.length?`<button class="btn wide" data-action="more">Show more</button>`:""}
   </div>`;
 }
+function openGrammar(){
+  document.getElementById("modal-root").innerHTML=`<div class="modal" data-action="closemodal"><div class="sheet card stack" role="dialog" aria-modal="true" aria-label="Why French words change shape">
+    <h2>Why the word looks different</h2>
+    <p class="muted small">French words change shape depending on how they're used. It's not about the word being "male" or "female" on its own — it's about what it has to agree with.</p>
+    <h3 style="margin-top:6px">Verbs change with who is doing it</h3>
+    <p class="small" lang="fr">je suis · tu es · il est · nous sommes · vous êtes · ils sont</p>
+    <p class="muted small">All six are <b lang="fr">être</b> (to be). English does a little of this too: I <b>am</b>, he <b>is</b>. French does more of it.</p>
+    <h3>Past actions use a participle</h3>
+    <p class="small" lang="fr">J'ai <b>mangé</b>. · Il a <b>fini</b>.</p>
+    <p class="muted small">After <b lang="fr">avoir</b> or <b lang="fr">être</b>, the verb takes a fixed past form, like "eaten" or "finished".</p>
+    <h3>Commands drop the subject</h3>
+    <p class="small" lang="fr">Écoute-moi. · Ferme la porte.</p>
+    <h3>Nouns and adjectives agree</h3>
+    <p class="muted small">Plural usually adds <b>-s</b>: <span lang="fr">un chien → deux chiens</span>. Adjectives copy the noun they describe, which is where masculine and feminine come in: <span lang="fr">un petit chien</span> but <span lang="fr">une petit<b>e</b> maison</span>.</p>
+    <p class="muted small">Mot à Mot teaches the dictionary form. The label just tells you which shape you're looking at, so nothing feels random.</p>
+    <button class="btn wide" data-action="closemodal">Got it</button>
+  </div></div>`;
+}
 function openWord(id){
   const w=WORDS[id];
   const root=document.getElementById("modal-root");
@@ -700,7 +857,8 @@ function openWord(id){
 /* ---------- settings ---------- */
 function renderSettings(){
   const s=S.settings;
-  const voices=frVoices.map(v=>`<option value="${esc(v.voiceURI)}" ${v.voiceURI===s.voice?"selected":""}>${esc(v.name)} (${esc(v.lang)})</option>`).join("");
+  const qual=v=>/premium/i.test(v.name)?" · premium":/enhanced|amélior/i.test(v.name)?" · enhanced":"";
+  const voices=frVoices.map(v=>`<option value="${esc(voiceKey(v))}" ${voiceKey(v)===s.voice?"selected":""}>${esc(v.name)} (${esc(v.lang)})${qual(v)}</option>`).join("");
   $app.innerHTML=`<div class="stack">
   <section class="card stack">
     <h2>Learning</h2>
@@ -714,7 +872,12 @@ function renderSettings(){
   </section>
   <section class="card stack">
     <h2>Voice</h2>
-    ${frVoices.length?`<div class="field"><label for="set-voice">French voice</label><select id="set-voice">${voices}</select></div>`:`<p class="notice">No French voice found. On iPhone: Settings → Accessibility → Spoken Content → Voices → French.</p>`}
+    ${!synth?`<p class="notice">This browser has no text-to-speech. Try Safari or Chrome.</p>`:
+      frVoices.length?`<div class="field"><label for="set-voice">French voice</label><select id="set-voice">${voices}</select></div>
+      <p class="muted small">Safari only hands websites the basic system voices, so Enhanced, Premium and Siri voices you download won't appear here even though they show in iOS settings. That's an Apple limitation, not a setting you can change.</p>`:
+      allVoiceCount===0?`<p class="notice">Your browser hasn't shared its voice list yet, so the app will use your device's default French voice. Tap the test button below. If you hear French, you're set. If the list stays empty, fully close the app and reopen it.</p>`:
+      `<p class="notice">The browser found ${allVoiceCount} voices but none in French. On iPhone, go to Settings → General → Read &amp; Speak → Voices → French and download a French (France) voice. Then fully close this app and reopen it.</p>`}
+    <p class="muted small">Voices found: ${allVoiceCount} total, ${frVoices.length} French.</p>
     <div class="field"><label for="set-rate">Speaking speed: <span id="rate-val">${s.rate.toFixed(2)}×</span></label><input type="range" id="set-rate" min="0.5" max="1.3" step="0.05" value="${s.rate}"></div>
     <button class="btn" data-action="testvoice">Test: « Bonjour, je m'appelle Bard. »</button>
   </section>
@@ -781,6 +944,10 @@ document.addEventListener("click",e=>{
     case "filter": wordsUI.filter=el.dataset.f; wordsUI.limit=120; render(); break;
     case "more": wordsUI.limit+=200; render(); break;
     case "openword": openWord(+el.dataset.id); break;
+    case "whyform": openGrammar(); break;
+    case "readnew": loadArticle(true); break;
+    case "readaloud": speak(reading&&reading.extract?reading.extract:""); break;
+    case "readtok": { const id=+el.dataset.id; if(id>=0) openWord(id); break; }
     case "testvoice": speak("Bonjour, je m'appelle Bard."); break;
     case "copybackup": {
       const ta=document.getElementById("backup-out"); ta.select();
@@ -846,7 +1013,7 @@ document.addEventListener("touchend",e=>{
   const b=document.querySelector(sel); b&&!b.disabled&&b.click();
 },{passive:true});
 
-render();
+render(); booted=true;
 })();
 </script>
 </body>
