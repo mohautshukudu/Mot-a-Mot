@@ -64,19 +64,23 @@ button{cursor:pointer}
   .page::before{content:"";position:absolute;left:28px;top:0;bottom:0;width:2px;background:var(--margin);opacity:.55}
 }
 /* top bar */
-.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:6px 14px}
-.logo{font-family:var(--f-hand);font-size:1.45rem;line-height:1.2;color:var(--pen);margin:0;font-weight:400}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
+  padding-block:10px 12px;margin-inline:-16px;padding-inline:16px;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--rule)}
+.titles{display:flex;flex-direction:column;gap:0}
+.screen{font-family:var(--f-label,var(--f-ui));font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.logo{font-family:var(--f-hand);font-size:1.3rem;line-height:1.2;color:var(--pen);margin:0;font-weight:400}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--card);border:1px solid var(--rule-strong);font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .pill b{color:var(--ink)}
 h2{font-size:1.2rem;margin:0;text-wrap:balance}
-h3{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:22px 0 8px;font-weight:700}
+h3{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:16px 0 6px;font-weight:700}
 p{margin:0}
 .muted{color:var(--muted)}
 .small{font-size:.86rem}
 .stack{display:flex;flex-direction:column;gap:12px}
+.card .stack{gap:10px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .spread{justify-content:space-between}
-.card{background:var(--card);border:1px solid var(--rule-strong);border-radius:var(--radius);padding:18px}
+.card{background:var(--card);border:1px solid var(--rule-strong);border-radius:var(--radius);padding:16px}
 .card.lift{box-shadow:var(--shadow);border-color:transparent}
 /* buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:10px 18px;border-radius:12px;border:1px solid var(--rule-strong);background:var(--card);font-weight:700;text-decoration:none;transition:transform .08s ease,background .15s}
@@ -95,10 +99,10 @@ p{margin:0}
 .bar{height:10px;border-radius:99px;background:var(--pen-soft);overflow:hidden}
 .stage{border-top:1px dashed var(--rule-strong);padding-top:10px;display:flex;flex-direction:column;gap:6px}
 .bar>i{display:block;height:100%;background:var(--pen);border-radius:99px;transition:width .3s ease}
-.big-num{font-family:var(--f-word);font-size:2.6rem;line-height:1;font-variant-numeric:tabular-nums}
+.big-num{font-family:var(--f-word);font-size:2.3rem;line-height:1;font-variant-numeric:tabular-nums}
 /* ladder */
-.ladder{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
-.rung{border:1px solid var(--rule-strong);border-radius:12px;padding:10px;background:var(--paper);display:flex;flex-direction:column;gap:2px;text-align:left;min-height:84px}
+.ladder{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:2px}
+.rung{border:1px solid var(--rule-strong);border-radius:12px;padding:10px 12px;background:var(--paper);display:flex;flex-direction:column;gap:2px;text-align:left;min-height:76px}
 .rung .lvl{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
 .rung .name{font-weight:700}
 .rung .st{font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:auto}
@@ -107,7 +111,7 @@ p{margin:0}
 .rung.ready{border-color:var(--pen);box-shadow:inset 0 0 0 1px var(--pen);background:var(--card)}
 .rung.locked{opacity:.55}
 .batch-list{display:flex;flex-direction:column;gap:0}
-.batch-list .bl{width:100%;border:0;background:transparent;text-align:left;font:inherit;color:inherit;cursor:pointer;display:flex;justify-content:space-between;gap:10px;padding:9px 2px;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums;font-size:.92rem}
+.batch-list .bl{width:100%;min-height:44px;align-items:center;border:0;background:transparent;text-align:left;font:inherit;color:inherit;cursor:pointer;display:flex;justify-content:space-between;gap:10px;padding:9px 2px;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums;font-size:.92rem}
 .batch-list .bl:last-child{border-bottom:0}
 .notice{border-radius:12px;padding:12px 14px;background:var(--warn-soft);color:var(--warn);font-size:.9rem}
 .notice.good{background:var(--good-soft);color:var(--good)}
@@ -117,7 +121,7 @@ p{margin:0}
 .chip.f{background:var(--fem-soft);color:var(--fem)}
 .chip.plain{background:transparent;border:1px solid var(--rule-strong);color:var(--muted);font-weight:400}
 /* word card */
-.wordcard{text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;padding:22px 18px}
+.wordcard{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px 16px}
 .visual.flat{min-height:0}
 .visual{position:relative;width:100%;max-width:100%;display:flex;justify-content:center;align-items:center;gap:14px;min-height:112px}
 .emoji{font-size:4.6rem;line-height:1.1}
@@ -126,15 +130,15 @@ p{margin:0}
 .fr{font-family:var(--f-word);font-size:clamp(2.1rem,9vw,2.9rem);line-height:1.1;overflow-wrap:anywhere;margin:0}
 .fr .art{color:var(--faint)}
 .fr.m .art{color:var(--masc)} .fr.f .art{color:var(--fem)}
-.en{font-size:1.25rem;font-weight:700}
-.example{border-top:1px dashed var(--rule-strong);padding-top:12px;width:100%;display:flex;gap:10px;align-items:center;text-align:left}
+.en{font-size:1.2rem;font-weight:700;line-height:1.35}
+.example{border-top:1px solid var(--rule);padding-top:12px;margin-top:2px;width:100%;display:flex;gap:12px;align-items:flex-start;text-align:left}
 .example .ex-fr{font-family:var(--f-word);font-size:1.08rem}
 mark{background:var(--pen-soft);color:var(--ink);border-radius:4px;padding:0 3px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
 .feedback mark{background:rgba(127,127,127,.18);color:inherit}
 .form-note{font-size:.82rem;color:var(--muted);margin-top:2px}
 .contraction{font-size:.82rem;color:var(--muted);margin-top:2px}
 .contraction b{color:var(--ink);font-family:var(--f-word);font-weight:400}
-.dictform{margin-top:10px;padding-top:8px;border-top:1px dashed var(--rule-strong)}
+.dictform{margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--paper)}
 .form-note b{color:var(--ink);font-family:var(--f-word);font-weight:400}
 .whybtn{border:1px solid var(--rule-strong);background:var(--card);color:var(--muted);width:20px;height:20px;border-radius:50%;font-size:.7rem;line-height:1;padding:0;vertical-align:middle}
 /* reading */
@@ -154,7 +158,10 @@ mark{background:var(--pen-soft);color:var(--ink);border-radius:4px;padding:0 3px
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
 .reveal{border:1px dashed var(--rule-strong);border-radius:10px;padding:10px 16px;background:transparent;color:var(--muted);width:100%}
 /* quiz */
-.qhead{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.qhead{position:sticky;top:calc(env(safe-area-inset-top,0px) + 54px);z-index:5;display:flex;align-items:center;gap:12px;margin-bottom:12px;
+  padding-block:8px;background:color-mix(in srgb,var(--paper) 90%,transparent);backdrop-filter:blur(6px)}
+.sticky-bar{position:sticky;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);z-index:4;padding-top:8px;
+  background:linear-gradient(to top,var(--paper) 72%,transparent)}
 .qhead .bar{flex:1}
 .prompt{min-height:180px;justify-content:center}
 .options{display:grid;grid-template-columns:1fr;gap:10px}
@@ -187,6 +194,8 @@ mark{background:var(--pen-soft);color:var(--ink);border-radius:4px;padding:0 3px
 .mrow .w{font-family:var(--f-word);font-size:1.05rem}
 /* word list */
 .search{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--rule-strong);background:var(--card)}
+.sticky-search{position:sticky;top:calc(env(safe-area-inset-top,0px) + 54px);z-index:5;display:flex;flex-direction:column;gap:8px;
+  padding-block:8px;background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(6px)}
 .filters{display:flex;gap:6px;flex-wrap:wrap}
 .filters button{padding:6px 12px;border-radius:999px;border:1px solid var(--rule-strong);background:var(--card);font-size:.86rem}
 .filters button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
@@ -204,6 +213,10 @@ mark{background:var(--pen-soft);color:var(--ink);border-radius:4px;padding:0 3px
 .field label{font-weight:700}
 .field select,.field input[type=number],.field textarea{padding:10px 12px;border-radius:10px;border:1px solid var(--rule-strong);background:var(--card)}
 .field textarea{min-height:84px;font:12px/1.4 ui-monospace,Menlo,monospace;resize:vertical}
+details.card>summary{cursor:pointer;list-style:none;font-size:1rem}
+details.card>summary::-webkit-details-marker{display:none}
+details.card>summary::after{content:"▾";float:right;color:var(--muted)}
+details.card[open]>summary::after{content:"▴"}
 .switch{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .switch input{width:22px;height:22px;accent-color:var(--pen)}
 /* tab bar */
@@ -226,7 +239,7 @@ mark{background:var(--pen-soft);color:var(--ink);border-radius:4px;padding:0 3px
 <body>
 <div class="page">
   <header class="top">
-    <h1 class="logo">Mot à Mot</h1>
+    <div class="titles"><h1 class="logo">Mot à Mot</h1><p class="screen" id="screen-title">Learn</p></div>
     <div class="row" id="topstats"></div>
   </header>
   <main id="app" aria-live="polite"></main>
@@ -240,7 +253,7 @@ mark{background:var(--pen-soft);color:var(--ink);border-radius:4px;padding:0 3px
 </nav></div>
 <div id="modal-root"></div>
 
-<script src="words.js?v=2026.09.19.0104"></script>
+<script src="words.js?v=2026.09.19.0115"></script>
 <script>
 (function(){
 "use strict";
@@ -256,7 +269,8 @@ const TOTAL = WORDS.length;
 const PLURAL = new Set(["gens","toilettes","vacances","lunettes","pâtes","félicitations"]);
 const H_ASPIRE = new Set(["haine","hasard","héros","honte","hâte","haut"]);
 const NO_EMOJI=new Set(["article","prep","conj","pron","det"]);
-function emojiFor(w){ return NO_EMOJI.has(w.pos)?"":w.emoji; }
+const NO_EMOJI_WORDS=new Set(["ne","pas","plus","moins","si","en","y"]);
+function emojiFor(w){ return (NO_EMOJI.has(w.pos)||NO_EMOJI_WORDS.has(w.fr))?"":w.emoji; }
 const MODES = [
   {key:"match", name:"Match", lvl:"Level 1", desc:"Pick the right meaning or word from a list."},
   {key:"type", name:"Type", lvl:"Level 2", desc:"See the English and type the French. Missing accents still count, but get flagged."}
@@ -671,8 +685,10 @@ function setTab(t){
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===t?"page":"false"));
   render(); window.scrollTo(0,0);
 }
+const SCREEN_TITLES={home:"Learn",study:"Flashcards",quiz:"Test",result:"Result",read:"Read",words:"Words",settings:"Settings"};
 function render(){
   topStats();
+  const t=document.getElementById("screen-title"); if(t) t.textContent=SCREEN_TITLES[view]||"";
   document.getElementById("tabs").hidden = (view==="quiz"||view==="study");
   if(view==="home") renderHome();
   else if(view==="study") renderStudy();
@@ -689,11 +705,10 @@ function renderHome(){
   let html=`<div class="stack">`;
   if(!storageOk) html+=`<p class="notice">This browser isn't saving progress (private mode or blocked storage). Use Settings → Backup to keep a copy.</p>`;
   html+=`<section class="card lift stack">
-    <div class="row spread" style="align-items:flex-end">
-      <div><p class="muted small">Words learned</p><p class="big-num">${learned.toLocaleString()}<span class="muted" style="font-size:1.1rem"> / ${TOTAL.toLocaleString()}</span></p></div>
-      <p class="muted small" style="text-align:right">Covers roughly ${coverage(learned)}%<br>of everyday spoken French</p>
-    </div>
+    <p class="muted small">Words learned</p>
+    <p class="big-num">${learned.toLocaleString()}<span class="muted" style="font-size:1.05rem"> / ${TOTAL.toLocaleString()}</span></p>
     <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${TOTAL}" aria-valuenow="${learned}"><i style="width:${(learned/TOTAL*100).toFixed(2)}%"></i></div>
+    <p class="muted small">About ${coverage(learned)}% of everyday speech</p>
     ${learned<100?`<div class="stage"><div class="row spread"><p class="small"><b>Stage 1</b> · the first 100 words</p><p class="muted small">${learned}/100</p></div>
       <div class="bar" style="height:6px"><i style="width:${learned}%"></i></div>
 </div>`:
@@ -708,7 +723,7 @@ function renderHome(){
     const ws=batchWords(b);
     const complete=batchComplete(b);
     html+=`<section class="card stack">
-      <div class="row spread"><div><h3 style="margin:0 0 2px">Batch ${b.n}</h3><h2>Words ${b.start+1}–${b.start+b.size}</h2></div><span class="chip">${b.size} new${(b.extras&&b.extras.length)?` + ${b.extras.length} revision`:""}</span></div>
+      <div><h3 style="margin:0 0 2px">Batch ${b.n}</h3><div class="row spread" style="align-items:baseline"><h2>Words ${b.start+1}–${b.start+b.size}</h2><span class="chip">${b.size} new${(b.extras&&b.extras.length)?` + ${b.extras.length}` :""}</span></div></div>
       <p class="muted small" lang="fr">${ws.slice(0,8).map(w=>esc(w.fr)).join(" · ")}${ws.length>8?" …":""}</p>
       ${(b.extras&&b.extras.length)?`<p class="muted small">Revision mixed in: ${b.extras.slice(0,6).map(i=>esc(WORDS[i].fr)).join(" · ")}${b.extras.length>6?" …":""}</p>`:""}
       <div class="ladder">${MODES.map((m,i)=>{
@@ -726,7 +741,7 @@ function renderHome(){
   }
   const done=S.batches.filter(x=>x.done).slice(-6).reverse();
   if(done.length){
-    html+=`<h3>Finished batches</h3><section class="card batch-list" style="padding:6px 16px">${done.map(x=>`<button class="bl" data-action="studybatch" data-n="${x.n}"><span>Batch ${x.n} · words ${x.start+1}–${x.start+x.size}</span><span class="muted">${batchAvg(x)??"–"}% · study ›</span></button>`).join("")}</section>
+    html+=`<h3>Finished batches</h3><section class="card batch-list" style="padding:6px 16px">${done.map(x=>`<button class="bl" data-action="studybatch" data-n="${x.n}"><span>Batch ${x.n} · words ${x.start+1}–${x.start+x.size}</span><span class="muted">${batchAvg(x)!=null?batchAvg(x)+"% · ":""}study ›</span></button>`).join("")}</section>
 `;
   }
 
@@ -768,7 +783,7 @@ function renderStudy(){
     <div class="qhead"><button class="icon-btn" data-action="home" aria-label="Back">✕</button><div class="bar"><i style="width:${((i+1)/ids.length*100)}%"></i></div><span class="pill"><b>${i+1}</b>/${ids.length}</span></div>
     ${wordCardHTML(w,{hide:study.hide,revealed:study.revealed})}
     <label class="switch card" style="padding:12px 16px"><span>Hide meanings (quiz yourself)</span><input type="checkbox" id="hide-toggle" ${study.hide?"checked":""}></label>
-    <div class="btn-row"><button class="btn" data-action="prev" ${i===0?"disabled":""}>Previous</button>
+    <div class="btn-row sticky-bar"><button class="btn" data-action="prev" ${i===0?"disabled":""}>Previous</button>
     ${i<ids.length-1?`<button class="btn primary" data-action="next">Next</button>`:`<button class="btn primary" data-action="studydone">Done</button>`}</div>
   </div>`;
   attachPhoto(w,document.getElementById("visual"));
@@ -864,7 +879,7 @@ function renderQuiz(){
   if(a){
     const exBlock=`<p class="fb-body"><span lang="fr" style="font-family:var(--f-word)">${esc(article(w)+w.fr)}</span> — ${esc(w.en)}</p><div class="fb-body small">${exampleHTML(w)}${contractionHTML(w.exFr)}</div>`;
     fb=`<div class="feedback ${a.ok?"good":"bad"} pop"><span class="hand">${a.ok?pickPraise():"Pas tout à fait…"}</span>${a.note?`<p class="fb-body small"><b>${esc(a.note)}</b></p>`:""}${exBlock}</div>
-      <button class="btn primary wide" data-action="continue" id="continue-btn">Continue</button>`;
+      <div class="sticky-bar"><button class="btn primary wide" data-action="continue" id="continue-btn">Continue</button></div>`;
   }
   $app.innerHTML=`<div class="stack">
     <div class="qhead"><button class="icon-btn" data-action="quit" aria-label="Quit test">✕</button><div class="bar"><i style="width:${doneN/quiz.total*100}%"></i></div><span class="pill"><b>${doneN}</b>/${quiz.total}</span></div>
@@ -1087,8 +1102,8 @@ function renderWords(){
   const shown=list.slice(0,wordsUI.limit);
   const f=(k,l)=>`<button data-action="filter" data-f="${k}" aria-pressed="${wordsUI.filter===k}">${l}</button>`;
   $app.innerHTML=`<div class="stack">
-    <input class="search" id="word-search" type="search" placeholder="Search French or English" value="${esc(wordsUI.q)}" aria-label="Search words">
-    <div class="filters">${f("all","All")}${f("current","This batch")}${f("learned","Learned")}${f("due","Due")}${f("new","Not yet")}</div>
+    <div class="sticky-search"><input class="search" id="word-search" type="search" placeholder="Search French or English" value="${esc(wordsUI.q)}" aria-label="Search words">
+    <div class="filters">${f("all","All")}${f("current","This batch")}${f("learned","Learned")}${f("due","Due")}${f("new","Not yet")}</div></div>
     <p class="muted small">${list.length.toLocaleString()} words · ranked by how often they come up in film and TV subtitles</p>
     <div class="wl">${shown.map(w=>{const s=wordStatus(w);return `<button class="wrow" data-action="openword" data-id="${w.id}"><span class="n">#${w.id+1}</span><span class="t"><b lang="fr">${esc(article(w)+w.fr)}</b><span>${esc(w.en)}</span></span><span class="dot ${s}" aria-label="${s}"></span></button>`;}).join("")||`<p class="muted" style="padding:16px">No words match.</p>`}</div>
     ${list.length>shown.length?`<button class="btn wide" data-action="more">Show more</button>`:""}
@@ -1138,10 +1153,10 @@ function renderSettings(){
       <select id="set-pass">${[70,80,90,100].map(v=>`<option value="${v}" ${s.passMark===v?"selected":""}>${v}% right first time</option>`).join("")}</select></div>
     <div class="field"><label for="set-max">Largest batch size</label>
       <select id="set-max">${[20,30,50,80].map(v=>`<option value="${v}" ${s.maxBatch===v?"selected":""}>${v} words</option>`).join("")}</select>
-      <p class="muted small">Batches start at 10 words. A first-try average of 90%+ adds 10, 80%+ adds 5, and under 65% takes 5 away.</p></div>
-    <label class="switch"><span>Show photos while studying<br><span class="muted small">Loaded from Wikipedia for nouns</span></span><input type="checkbox" id="set-photos" ${s.photos?"checked":""}></label>
+      <p class="muted small">Batches grow with your first-try average, and about a third of each is revision.</p></div>
+    <label class="switch"><span>Photos on cards<br><span class="muted small">From Wikipedia, nouns only</span></span><input type="checkbox" id="set-photos" ${s.photos?"checked":""}></label>
     <label class="switch"><span>Say each word aloud when studying</span><input type="checkbox" id="set-autoplay" ${s.autoplay!==false?"checked":""}></label>
-    <label class="switch"><span>Use human recordings (slower)<br><span class="muted small">Native speakers from Wikimedia. Off by default because it fetches a recording per word, which slows down studying. The device voice is instant.</span></span><input type="checkbox" id="set-recordings" ${s.recordings?"checked":""}></label>
+    <label class="switch"><span>Human recordings<br><span class="muted small">Native speakers, fetched per word. Slower than the device voice.</span></span><input type="checkbox" id="set-recordings" ${s.recordings?"checked":""}></label>
     <div class="row"><button class="btn" data-action="fetchaudio">Fetch recordings for this batch</button></div>
     <p class="muted small" id="audio-stat">${(()=>{const b=current();if(!b)return"";const ws=batchWords(b);const got=ws.filter(w=>audioCache[w.fr]).length;const miss=ws.filter(w=>audioCache[w.fr]==="").length;return `Recordings: ${got} found, ${miss} unavailable, ${ws.length-got-miss} not checked yet (this batch).`;})()}</p>
   </section>
@@ -1161,23 +1176,23 @@ function renderSettings(){
     <div class="field"><label for="set-theme">Theme</label><select id="set-theme"><option value="" ${!s.theme?"selected":""}>Match my device</option><option value="light" ${s.theme==="light"?"selected":""}>Light</option><option value="dark" ${s.theme==="dark"?"selected":""}>Dark</option></select></div>
   </section>
   <section class="card stack">
-    <h2>Already know some French?</h2>
-    <p class="muted small">Marks the first N words as learned. They go into review, so you'll still be tested on them.</p>
+    <h2>Skip ahead</h2>
+    <p class="muted small">Marks the first N words as learned. They still come back in review.</p>
     <div class="row"><input type="number" id="skip-n" min="0" max="${TOTAL}" step="10" value="${learnedCount()}" style="width:120px;padding:10px;border-radius:10px;border:1px solid var(--rule-strong);background:var(--card)" aria-label="Number of words"><button class="btn" data-action="skipto">Start from word ${"#"}N+1</button></div>
   </section>
-  <section class="card stack">
-    <h2>Backup</h2>
+  <details class="card stack"><summary><b>Backup &amp; reset</b></summary>
+  <section class="stack" style="margin-top:10px">
+    <h3 style="margin-top:0">Backup</h3>
     <p class="muted small">Progress lives in this browser only. Copy the code into your notes to move to another device or keep it safe.</p>
     <div class="field"><label for="backup-out">Your backup code</label><textarea id="backup-out" readonly></textarea></div>
     <button class="btn" data-action="copybackup">Copy code</button>
     <div class="field"><label for="backup-in">Restore from a code</label><textarea id="backup-in" placeholder="Paste a backup code here"></textarea></div>
     <button class="btn" data-action="restore">Restore progress</button>
   </section>
-  <section class="card stack">
-    <h2>Start over</h2>
+    <h3>Start over</h3>
     <button class="btn danger" data-action="reset" id="reset-btn">Reset all progress</button>
-  </section>
-  <p class="muted small">App version <b>2026.09.19.0104</b> · ${TOTAL.toLocaleString()} words${window.FORMS_INDEX?" · reading index loaded":" · reading index missing (upload words.js again)"}</p>
+  </section></details>
+  <p class="muted small">App version <b>2026.09.19.0115</b> · ${TOTAL.toLocaleString()} words${window.FORMS_INDEX?" · reading index loaded":" · reading index missing (upload words.js again)"}</p>
   <p class="muted small">Word ranking from the OpenSubtitles 2018 French frequency list (hermitdave/FrequencyWords, CC BY-SA 4.0). Photos from Wikipedia. Pronunciation uses your device's built-in voice.</p>
   </div>`;
   document.getElementById("backup-out").value=btoa(unescape(encodeURIComponent(JSON.stringify(S))));
