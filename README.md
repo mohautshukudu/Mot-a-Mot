@@ -11,13 +11,15 @@ A free, no-account web app for learning the ~2,000 most common French words, ran
 
   Batches stay between 10 and 50 words, and you can change the cap in Settings.
 - **Study.** Each word has an emoji, a Wikipedia photo (nouns only), its gender, audio and an example sentence. You can hide the meanings to quiz yourself.
-- **Three levels per batch, in order:**
+- **Two levels per batch, in order:**
   1. **Match**: pick the meaning, or pick the French word.
-  2. **Listen**: hear the word and pick its meaning.
-  3. **Type**: see the English and type the French. Missing accents still count as correct, but the app flags them.
+  2. **Type**: see the English and type the French. Missing accents still count as correct, but the app flags them.
 
-  You need your pass mark (80% by default, right first time) on all three levels to unlock the next batch. Anything you miss comes back in the same test until you get it right.
+  Listening practice is deliberately left out — words first, then ears, using films and YouTube with subtitles. Audio buttons are still on every card.
+
+  You need your pass mark (80% by default, right first time) on both levels to unlock the next batch. Anything you miss comes back in the same test until you get it right.
 - **Review.** Finished words come back on a spaced schedule: 1, 3, 7, 14, 30, 60 and then 120 days.
+- **Contractions.** Where a sentence has c'est, j'ai, l'eau or qu'il, the app spells out what it's made of: *c'est = ce + est (être)*.
 - **Word forms.** Example sentences highlight the word, and when it appears in a changed form (suis for être, chiens for chien) the app says which form it is. Tap the ? for a short grammar primer.
 - **Read.** The Read tab pulls a random French Wikipedia article, highlights the words you've learned, and tells you what share of the passage you know. Tap any highlighted word for its meaning and pronunciation.
 - **Already know some French?** Go to Settings → "Already know some French?" to skip ahead.
