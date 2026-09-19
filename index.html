@@ -238,7 +238,7 @@ mark{background:var(--pen-soft);color:var(--ink);border-radius:4px;padding:0 3px
 </nav></div>
 <div id="modal-root"></div>
 
-<script src="words.js?v=2026.09.19.0033"></script>
+<script src="words.js?v=2026.09.19.0044"></script>
 <script>
 (function(){
 "use strict";
@@ -351,6 +351,40 @@ function newBatch(){
   S.batches.push({n:S.batches.length+1,start,size,extras,done:false,modes:{match:{best:null,first:null,passed:false},listen:{best:null,first:null,passed:false},type:{best:null,first:null,passed:false}}});
   persist();
 }
+
+/* ---------- one-time migration: the list was re-ranked, so old positions moved ---------- */
+function migrateOrder(){
+  if(S.v>=2 || !window.ORDER_V1 || !Array.isArray(window.ORDER_V1)) { S.v=2; return; }
+  const newIndex=new Map(); WORDS.forEach(w=>newIndex.set(w.fr,w.id));
+  const learned=[];                                   // words he had already learned, by name
+  const oldWords=S.words||{};
+  const remapped={};
+  Object.keys(oldWords).forEach(k=>{
+    const fr=window.ORDER_V1[+k];
+    if(fr==null) return;
+    const ni=newIndex.get(fr);
+    if(ni==null) return;
+    remapped[ni]=oldWords[k];
+    if(oldWords[k] && oldWords[k].box>0) learned.push(ni);
+  });
+  // anything inside a finished batch counted as learned, even if it had no review record yet
+  (S.batches||[]).filter(b=>b.done).forEach(b=>{
+    for(let i=b.start;i<b.start+b.size;i++){
+      const fr=window.ORDER_V1[i]; const ni=fr!=null?newIndex.get(fr):null;
+      if(ni!=null && !remapped[ni]){ remapped[ni]={box:1,due:today()+1}; learned.push(ni); }
+    }
+  });
+  S.words=remapped;
+  const count=new Set(learned).size;
+  S.batches=[];
+  if(count>0){
+    S.batches.push({n:1,start:0,size:count,extras:[],done:true,skipped:true,
+      modes:{match:{best:null,first:null,passed:true},listen:{best:null,first:null,passed:true},type:{best:null,first:null,passed:true}}});
+  }
+  S.v=2;
+  persist();
+}
+migrateOrder();
 if(!S.batches.length || S.batches[S.batches.length-1].done) newBatch();
 function modeState(b,key){ return b.modes[key]; }
 function modeUnlocked(b,idx){ return idx===0 || b.modes[MODES[idx-1].key].passed; }
@@ -1113,7 +1147,7 @@ function renderSettings(){
     <h2>Start over</h2>
     <button class="btn danger" data-action="reset" id="reset-btn">Reset all progress</button>
   </section>
-  <p class="muted small">App version <b>2026.09.19.0033</b> · ${TOTAL.toLocaleString()} words${window.FORMS_INDEX?" · reading index loaded":" · reading index missing (upload words.js again)"}</p>
+  <p class="muted small">App version <b>2026.09.19.0044</b> · ${TOTAL.toLocaleString()} words${window.FORMS_INDEX?" · reading index loaded":" · reading index missing (upload words.js again)"}</p>
   <p class="muted small">Word ranking from the OpenSubtitles 2018 French frequency list (hermitdave/FrequencyWords, CC BY-SA 4.0). Photos from Wikipedia. Pronunciation uses your device's built-in voice.</p>
   </div>`;
   document.getElementById("backup-out").value=btoa(unescape(encodeURIComponent(JSON.stringify(S))));

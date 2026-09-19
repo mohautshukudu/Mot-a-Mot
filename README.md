@@ -42,6 +42,10 @@ Pronunciation uses your device's built-in French voice, so it's free and there's
 
 ## Credits
 
-- **Word ranking:** OpenSubtitles 2018 French frequency list by Hermit Dave ([hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords), CC BY-SA 4.0), grouped into dictionary forms using spaCy's lookup tables.
+- **Word ranking:** a blend of two sources, so the list reflects both speech and writing:
+  - the OpenSubtitles 2018 French frequency list by Hermit Dave ([hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords), CC BY-SA 4.0) — film and TV dialogue;
+  - [wordfreq](https://pypi.org/project/wordfreq/), which combines Wikipedia, subtitles, news, books, web text and social media.
+  
+  Surface forms are grouped into dictionary forms using spaCy's lookup tables. Subtitles alone over-rank crime and drama vocabulary (flic, meurtre) and under-rank work and news vocabulary (entreprise, projet), which the blend corrects.
 - **Meanings and example sentences:** written for this app.
 - **Photos:** loaded live from Wikipedia.
