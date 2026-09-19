@@ -141,6 +141,12 @@ mark{background:var(--pen-soft);color:var(--ink);border-radius:4px;padding:0 3px
 .article .tok.known{background:var(--good-soft);color:var(--good)}
 .article .tok.current{background:var(--pen-soft);color:var(--pen)}
 .article .tok.soon{border-bottom:1.5px dotted var(--faint)}
+.slots{display:flex;flex-wrap:wrap;gap:6px;min-height:52px;padding:10px;border:1.5px dashed var(--rule-strong);border-radius:12px;align-items:center}
+.tiles{display:flex;flex-wrap:wrap;gap:6px}
+.tile{font-family:var(--f-word);font-size:1.05rem;padding:8px 12px;border-radius:10px;border:1px solid var(--rule-strong);background:var(--card)}
+.tile.placed{background:var(--pen-soft);border-color:var(--pen);color:var(--pen)}
+.tile.good{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.tile.bad{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
 .article-img{width:100%;max-height:200px;object-fit:cover;border-radius:12px}
 .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.78rem;color:var(--muted)}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
@@ -232,7 +238,7 @@ mark{background:var(--pen-soft);color:var(--ink);border-radius:4px;padding:0 3px
 </nav></div>
 <div id="modal-root"></div>
 
-<script src="words.js?v=2026.09.18.1655"></script>
+<script src="words.js?v=2026.09.19.0033"></script>
 <script>
 (function(){
 "use strict";
@@ -241,6 +247,7 @@ let view="home";           // home | study | quiz | result | words | settings
 let study=null;            // {ids, i, hide}
 let quiz=null;             // session
 let wordsUI={q:"",filter:"all",limit:120};
+let builderPool=null;
 /* ---------- data ---------- */
 const WORDS = (window.WORDS||[]).map((a,i)=>({id:i,fr:a[0],g:a[1],pos:a[2],en:a[3],emoji:a[4],exFr:a[5],exEn:a[6],hl:a[7]&&a[7].length?a[7]:null,nf:a[8]||"",dict:(a[9]&&a[9].length?a[9]:null)}));
 const TOTAL = WORDS.length;
@@ -293,21 +300,33 @@ function load(k,fallback){ try{ const v=localStorage.getItem(k); return v?JSON.p
 function save(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); return true; }catch(e){ return false; } }
 function freshState(){
   return { v:1, batches:[], words:{}, hiddenPhotos:[],
-    settings:{passMark:80, maxBatch:50, rate:0.9, voice:"", photos:true, recordings:false, theme:""},
+    settings:{passMark:80, maxBatch:50, rate:0.9, voice:"", photos:true, recordings:false, reviewMode:"mixed", theme:""},
     stats:{streak:0, lastDay:-1, answers:0} };
 }
 let S = load(STORE_KEY,null) || freshState();
 S.settings = Object.assign(freshState().settings, S.settings||{});
 let storageOk = save(STORE_KEY,S);
-function persist(){ storageOk = save(STORE_KEY,S); }
+function persist(){ storageOk = save(STORE_KEY,S); builderPool=null; }
 function today(){ const d=new Date(); return Math.floor((d.getTime()-d.getTimezoneOffset()*60000)/864e5); }
 function applyTheme(){ const t=S.settings.theme; if(t) document.documentElement.setAttribute("data-theme",t); else document.documentElement.removeAttribute("data-theme"); }
 applyTheme();
 
 /* ---------- batches ---------- */
-function learnedCount(){ const b=S.batches.filter(x=>x.done); return b.reduce((n,x)=>n+x.size,0); }
+function learnedCount(){ return S.batches.filter(x=>x.done).reduce((n,x)=>n+x.size,0); }
 function current(){ return S.batches[S.batches.length-1]; }
-function batchWords(b){ return WORDS.slice(b.start,b.start+b.size); }
+function newWords(b){ return WORDS.slice(b.start,b.start+b.size); }
+function revisionWords(b){ return (b.extras||[]).map(i=>WORDS[i]).filter(Boolean); }
+function batchWords(b){ return newWords(b).concat(revisionWords(b)); }
+function missCount(id){ const w=S.words[id]; return w&&w.miss?w.miss:0; }
+// pick words already learned, worst first, to fold back into a new batch
+function pickRevision(n,excludeFrom,excludeTo){
+  if(n<=0) return [];
+  const pool=WORDS.filter(w=>{ const p=S.words[w.id]; return p&&p.box>0 && !(w.id>=excludeFrom&&w.id<excludeTo); });
+  if(!pool.length) return [];
+  const scored=pool.map(w=>({id:w.id, score:missCount(w.id)*10 + Math.random()*4 + (S.words[w.id].box<=1?3:0)}));
+  scored.sort((a,b)=>b.score-a.score);
+  return scored.slice(0,n).map(x=>x.id);
+}
 function nextSize(){
   if(!S.batches.length) return 10;
   const b=current();
@@ -325,18 +344,21 @@ function batchAvg(b){
 function newBatch(){
   const start=learnedCount();
   if(start>=TOTAL) return;
-  const size=Math.min(nextSize(),TOTAL-start);
-  S.batches.push({n:S.batches.length+1,start,size,done:false,modes:{match:{best:null,first:null,passed:false},listen:{best:null,first:null,passed:false},type:{best:null,first:null,passed:false}}});
+  const total=Math.min(nextSize(),TOTAL-start);
+  const revision=S.batches.some(b=>b.done)?Math.round(total/3):0;
+  const size=Math.max(1,total-revision);
+  const extras=pickRevision(revision,start,start+size);
+  S.batches.push({n:S.batches.length+1,start,size,extras,done:false,modes:{match:{best:null,first:null,passed:false},listen:{best:null,first:null,passed:false},type:{best:null,first:null,passed:false}}});
   persist();
 }
-if(!S.batches.length) newBatch();
+if(!S.batches.length || S.batches[S.batches.length-1].done) newBatch();
 function modeState(b,key){ return b.modes[key]; }
 function modeUnlocked(b,idx){ return idx===0 || b.modes[MODES[idx-1].key].passed; }
 function batchComplete(b){ return MODES.every(m=>b.modes[m.key].passed); }
 function finishBatch(){
   const b=current(); if(!b||b.done||!batchComplete(b)) return;
   b.done=true; const d=today();
-  batchWords(b).forEach(w=>{ const ws=S.words[w.id]||(S.words[w.id]={}); ws.box=1; ws.due=d+1; });
+  newWords(b).forEach(w=>{ const ws=S.words[w.id]||(S.words[w.id]={}); ws.box=1; ws.due=d+1; });
   newBatch(); persist();
 }
 function dueWords(){
@@ -532,17 +554,29 @@ function frHTML(w){
 }
 
 function normForm(x){ return String(x).toLowerCase().replace(/œ/g,"oe").replace(/[’]/g,"'"); }
+function shortForm(nf){
+  if(!nf) return "";
+  const m=nf.match(/«([^»]+)»/);
+  if(m) return m[1]+" form";
+  if(/past participle/i.test(nf)) return "past form";
+  if(/command/i.test(nf)) return "command form";
+  if(/feminine plural/i.test(nf)) return "feminine plural";
+  if(/feminine/i.test(nf)) return "feminine";
+  if(/plural/i.test(nf)) return "plural";
+  if(/-ant/.test(nf)) return "-ant form";
+  return "another form";
+}
 function formNoteHTML(w){
   if(!w.hl) return "";
   const form=w.exFr.slice(w.hl[0],w.hl[1]);
   if(normForm(form)===normForm(w.fr)) return "";
-  return `<p class="form-note"><b lang="fr">${esc(form.toLowerCase())}</b> is a form of <b lang="fr">${esc(w.fr)}</b>${w.nf?` — ${esc(w.nf)}`:""} <button class="whybtn" data-action="whyform" aria-label="Why does the word change?">?</button></p>`;
+  const tag=shortForm(w.nf);
+  return `<p class="form-note"><b lang="fr">${esc(form.toLowerCase())}</b> = <b lang="fr">${esc(w.fr)}</b>${tag?` · ${esc(tag)}`:""} <button class="whybtn" data-action="whyform" aria-label="Why does the word change?">?</button></p>`;
 }
 function dictFormHTML(w){
   if(!w.dict) return "";
   const marked=esc(w.dict[0]).replace(esc(w.fr), m=>`<mark>${m}</mark>`);
-  return `<div class="dictform"><p class="ex-fr" lang="fr">${marked}</p><p class="muted small">${esc(w.dict[1])}</p>
-    <p class="muted small">the dictionary form, the one you're tested on</p></div>`;
+  return `<div class="dictform"><p class="ex-fr" lang="fr">${marked}</p><p class="muted small">${esc(w.dict[1])}</p></div>`;
 }
 function exampleHTML(w,opts){
   opts=opts||{};
@@ -599,11 +633,11 @@ function renderHome(){
     <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${TOTAL}" aria-valuenow="${learned}"><i style="width:${(learned/TOTAL*100).toFixed(2)}%"></i></div>
     ${learned<100?`<div class="stage"><div class="row spread"><p class="small"><b>Stage 1</b> · the first 100 words</p><p class="muted small">${learned}/100</p></div>
       <div class="bar" style="height:6px"><i style="width:${learned}%"></i></div>
-      <p class="muted small">These 100 alone cover roughly half of everyday speech, so they're worth more than the next 400 put together.</p></div>`:
-     `<p class="muted small">Stage 1 done: you have the 100 most common words, roughly half of everyday speech.</p>`}
+</div>`:
+     ``}
   </section>`;
   if(due){
-    html+=`<section class="card row spread"><div><h2>${due} word${due>1?"s":""} to review</h2><p class="muted small">Spaced review keeps old batches from fading.</p></div><button class="btn primary" data-action="review">Review now</button></section>`;
+    html+=`<section class="card row spread"><h2>${due} word${due>1?"s":""} to review</h2><div class="row"><button class="btn primary" data-action="review" data-style="mixed">Review</button><button class="btn" data-action="review" data-style="type">Review by typing</button></div></section>`;
   }
   if(!b){
     html+=`<section class="card stack"><p class="praise">Félicitations !</p><h2>You've worked through all ${TOTAL.toLocaleString()} words.</h2><p class="muted">Keep up your reviews, and start leaning on films and podcasts.</p></section>`;
@@ -611,8 +645,9 @@ function renderHome(){
     const ws=batchWords(b);
     const complete=batchComplete(b);
     html+=`<section class="card stack">
-      <div class="row spread"><div><h3 style="margin:0 0 2px">Batch ${b.n}</h3><h2>Words ${b.start+1}–${b.start+b.size}</h2></div><span class="chip">${b.size} words</span></div>
+      <div class="row spread"><div><h3 style="margin:0 0 2px">Batch ${b.n}</h3><h2>Words ${b.start+1}–${b.start+b.size}</h2></div><span class="chip">${b.size} new${(b.extras&&b.extras.length)?` + ${b.extras.length} revision`:""}</span></div>
       <p class="muted small" lang="fr">${ws.slice(0,8).map(w=>esc(w.fr)).join(" · ")}${ws.length>8?" …":""}</p>
+      ${(b.extras&&b.extras.length)?`<p class="muted small">Revision mixed in: ${b.extras.slice(0,6).map(i=>esc(WORDS[i].fr)).join(" · ")}${b.extras.length>6?" …":""}</p>`:""}
       <div class="ladder">${MODES.map((m,i)=>{
         const st=modeState(b,m.key); const un=modeUnlocked(b,i);
         const cls=st.passed?"passed":un?"ready":"locked";
@@ -623,13 +658,13 @@ function renderHome(){
       ${complete?`<p class="notice good">Batch passed with a first-try average of ${batchAvg(b)}%. Next batch: ${nextSize()} words.</p>
         <div class="btn-row"><button class="btn primary" data-action="study">Study words</button><button class="btn" data-action="nextbatch">Unlock next batch</button></div>`:
       `<div class="btn-row"><button class="btn primary" data-action="study">Study words</button>${(()=>{const i=MODES.findIndex((m,idx)=>modeUnlocked(b,idx)&&!b.modes[m.key].passed);const m=MODES[i];return `<button class="btn" data-action="test" data-mode="${m.key}">Test: ${m.name}</button>`;})()}</div>
-      <p class="muted small">Studying is practice and changes nothing. Tests are scored: pass all three levels at ${S.settings.passMark}% or more to unlock the next batch.</p>`}
+      `}
     </section>`;
   }
   const done=S.batches.filter(x=>x.done).slice(-6).reverse();
   if(done.length){
     html+=`<h3>Finished batches</h3><section class="card batch-list" style="padding:6px 16px">${done.map(x=>`<button class="bl" data-action="studybatch" data-n="${x.n}"><span>Batch ${x.n} · words ${x.start+1}–${x.start+x.size}</span><span class="muted">${batchAvg(x)??"–"}% · study ›</span></button>`).join("")}</section>
-      <p class="muted small">Tap a finished batch to study its words again.</p>`;
+`;
   }
   if(!hasFrench()) html+=`<p class="notice">No French voice found in this browser, so the Listen level can't play audio. On iPhone, add one in Settings → General → Read &amp; Speak → Voices → French, then fully close and reopen this app. You can still skip the Listen level when you reach it.</p>`;
   html+=`</div>`;
@@ -690,9 +725,17 @@ function startTest(modeKey){
   quiz={type:"batch",mode:modeKey,queue:makeItems(ws,()=>modeKey),total:ws.length,first:{},doneIds:new Set(),answered:null,missed:[],notes:[]};
   view="quiz"; render(); window.scrollTo(0,0);
 }
-function startReview(){
+function startReview(mode){
+  if(mode) { S.settings.reviewMode=mode; persist(); }
   const ws=shuffle(dueWords()).slice(0,40); if(!ws.length) return;
-  const kindFor=w=>{ const box=(S.words[w.id]||{}).box||1; const order=hasFrench()?["match","listen","type"]:["match","type"]; return order[Math.min(box-1,order.length-1)] ; };
+  const style=S.settings.reviewMode||"mixed";
+  const kindFor=w=>{
+    if(style==="type") return "type";
+    if(style==="match") return "match";
+    const box=(S.words[w.id]||{}).box||1;
+    const order=hasFrench()?["match","listen","type"]:["match","type"];
+    return order[Math.min(box-1,order.length-1)];
+  };
   quiz={type:"review",queue:makeItems(ws,kindFor),total:ws.length,first:{},doneIds:new Set(),answered:null,missed:[],notes:[]};
   view="quiz"; render(); window.scrollTo(0,0);
 }
@@ -775,7 +818,10 @@ const PRAISE=["Bravo !","Très bien !","Parfait !","Excellent !","Super !","C'es
 function pickPraise(){ return PRAISE[Math.floor(Math.random()*PRAISE.length)]; }
 function recordAnswer(ok,extra){
   const item=currentItem(); const w=WORDS[item.wid];
-  if(!(item.wid in quiz.first)){ quiz.first[item.wid]=ok; if(!ok) quiz.missed.push(item.wid); }
+  if(!(item.wid in quiz.first)){
+    quiz.first[item.wid]=ok;
+    if(!ok){ quiz.missed.push(item.wid); const ws=S.words[item.wid]||(S.words[item.wid]={box:0,due:0}); ws.miss=(ws.miss||0)+1; }
+  }
   if(quiz.type==="review"){
     const ws=S.words[item.wid]||(S.words[item.wid]={box:1,due:today()});
     if(!item.retry){ if(ok){ ws.box=Math.min(ws.box+1,INTERVALS.length-1); ws.due=today()+INTERVALS[ws.box]; } else { ws.box=1; ws.due=today()+1; } }
@@ -904,15 +950,71 @@ function renderRead(){
       <div class="row spread"><p><b>${pct}%</b> of this passage is vocabulary you've learned</p><span class="chip">${known}/${inList}</span></div>
       <div class="bar"><i style="width:${pct}%"></i></div>
       <div class="legend"><span><i style="background:var(--good)"></i>learned</span><span><i style="background:var(--pen)"></i>this batch</span><span><i style="background:var(--faint)"></i>later in the list</span><span><i style="background:var(--rule-strong)"></i>beyond the 2,000</span></div>
-      <p class="muted small">Tap any coloured word to see what it means and hear it.</p>
+
     </section>`;
   }
   $app.innerHTML=`<div class="stack">
+    ${builderHTML()}
     <div class="row spread"><h2>Reading</h2><button class="btn ${reading?"":"primary"}" data-action="readnew" ${readBusy?"disabled":""}>${readBusy?"Loading…":"New article"}</button></div>
-    <p class="muted small">A random article from French Wikipedia. Real French, written for French readers — don't expect to understand all of it yet.</p>
     ${readErr?`<p class="notice">${esc(readErr)}</p>`:""}
     ${body||(readBusy?`<p class="muted">Fetching an article…</p>`:"")}
   </div>`;
+}
+
+
+/* ---------- sentence building (learned words only) ---------- */
+let builder=null;
+function sentenceTokens(w){
+  return (w.exFr.match(/[A-Za-zÀ-ÿŒœ]+(?:['’-][A-Za-zÀ-ÿŒœ]+)*/g)||[]);
+}
+function knownWord(tok){
+  const id=lookupForm(tok);
+  if(id<0) return false;
+  const st=wordStatus(WORDS[id]);
+  return st==="learned"||st==="due";
+}
+function eligibleSentences(){
+  if(builderPool) return builderPool;
+  builderPool=WORDS.filter(w=>{
+    const toks=sentenceTokens(w);
+    if(toks.length<3||toks.length>8) return false;
+    const unknown=toks.filter(t=>!knownWord(t)).length;
+    return unknown===0;
+  });
+  return builderPool;
+}
+function startBuilder(){
+  const pool=eligibleSentences();
+  if(!pool.length) return;
+  const w=pool[Math.floor(Math.random()*pool.length)];
+  const parts=w.exFr.split(/\s+/).filter(Boolean);
+  builder={wid:w.id, answer:parts, tiles:shuffle(parts.map((p,i)=>({p,i}))), placed:[], checked:null};
+  render();
+}
+function builderHTML(){
+  const pool=eligibleSentences();
+  if(pool.length<3){
+    return `<section class="card stack"><h2>Sentence practice</h2>
+      <p class="muted small">Unlocks once you've learned enough words to make whole sentences. ${pool.length}/3 ready so far — finish a batch or two and it opens.</p></section>`;
+  }
+  if(!builder){
+    return `<section class="card stack"><div class="row spread"><h2>Sentence practice</h2><span class="chip">${pool.length} sentences</span></div>
+      <p class="muted small">Put a French sentence in order. Only words you've learned.</p>
+      <button class="btn primary wide" data-action="buildnew">Start</button></section>`;
+  }
+  const w=WORDS[builder.wid];
+  const done=builder.checked;
+  return `<section class="card lift stack">
+    <div class="row spread"><h3 style="margin:0">Put it in order</h3><span class="chip">${eligibleSentences().length} available</span></div>
+    <p class="en" style="font-size:1.05rem">${esc(w.exEn)}</p>
+    <div class="slots" aria-label="Your sentence">${builder.placed.length?builder.placed.map((t,k)=>`<button class="tile placed ${done?(done.ok?"good":(builder.answer[k]===t.p?"good":"bad")):""}" data-action="unplace" data-k="${k}" lang="fr">${esc(t.p)}</button>`).join(""):`<span class="muted small">tap the words below</span>`}</div>
+    <div class="tiles">${builder.tiles.map((t,k)=>builder.placed.some(x=>x.i===t.i)?"":`<button class="tile" data-action="place" data-k="${k}" lang="fr">${esc(t.p)}</button>`).join("")}</div>
+    ${done?`<div class="feedback ${done.ok?"good":"bad"}"><span class="hand">${done.ok?pickPraise():"Not quite"}</span>
+        <p class="fb-body" lang="fr">${esc(w.exFr)}</p><p class="fb-body small">${esc(w.exEn)}</p></div>
+      <button class="btn primary wide" data-action="buildnew">Next sentence</button>`:
+    `<div class="btn-row"><button class="btn" data-action="buildreset">Clear</button>
+      <button class="btn primary" data-action="buildcheck" ${builder.placed.length===builder.answer.length?"":"disabled"}>Check</button></div>`}
+  </section>`;
 }
 
 /* ---------- words list ---------- */
@@ -941,6 +1043,9 @@ function openGrammar(){
     <h3>Past actions use a participle</h3>
     <p class="small" lang="fr">J'ai <b>mangé</b>. · Il a <b>fini</b>.</p>
     <p class="muted small">After <b lang="fr">avoir</b> or <b lang="fr">être</b>, the verb takes a fixed past form, like "eaten" or "finished".</p>
+    <h3>“Il faut” — an “il” that isn't “he”</h3>
+    <p class="small" lang="fr">Il faut être patient. · Il pleut. · Il y a un problème.</p>
+    <p class="muted small">Here <b lang="fr">il</b> is a placeholder, like the “it” in “it's raining”. <b lang="fr">Il faut</b> means “one must / you have to” in general, about nobody in particular, and only exists in this form — there's no <span lang="fr">tu faut</span>. To aim it at a person, use <b lang="fr">devoir</b>: <span lang="fr">tu dois être patient</span>, <span lang="fr">vous devez être patient</span>.</p>
     <h3>Commands drop the subject</h3>
     <p class="small" lang="fr">Écoute-moi. · Ferme la porte.</p>
     <h3>Nouns and adjectives agree</h3>
@@ -1008,7 +1113,7 @@ function renderSettings(){
     <h2>Start over</h2>
     <button class="btn danger" data-action="reset" id="reset-btn">Reset all progress</button>
   </section>
-  <p class="muted small">App version <b>2026.09.18.1655</b> · ${TOTAL.toLocaleString()} words${window.FORMS_INDEX?" · reading index loaded":" · reading index missing (upload words.js again)"}</p>
+  <p class="muted small">App version <b>2026.09.19.0033</b> · ${TOTAL.toLocaleString()} words${window.FORMS_INDEX?" · reading index loaded":" · reading index missing (upload words.js again)"}</p>
   <p class="muted small">Word ranking from the OpenSubtitles 2018 French frequency list (hermitdave/FrequencyWords, CC BY-SA 4.0). Photos from Wikipedia. Pronunciation uses your device's built-in voice.</p>
   </div>`;
   document.getElementById("backup-out").value=btoa(unescape(encodeURIComponent(JSON.stringify(S))));
@@ -1026,7 +1131,7 @@ document.addEventListener("click",e=>{
     case "studymissed": startStudy(lastResult.missed.slice()); break;
     case "studybatch": { const b=S.batches.find(x=>x.n===+el.dataset.n); if(b) startStudy(batchWords(b).map(w=>w.id)); break; }
     case "test": startTest(el.dataset.mode); break;
-    case "review": startReview(); break;
+    case "review": startReview(el.dataset.style||""); break;
     case "nextbatch": finishBatch(); setTab("home"); toast("New batch unlocked"); break;
     case "say": sayWord(WORDS[+el.dataset.id],!!el.dataset.slow); break;
     case "sayex": speak(WORDS[+el.dataset.id].exFr); break;
@@ -1060,6 +1165,15 @@ document.addEventListener("click",e=>{
       break; }
     case "readnew": loadArticle(true); break;
     case "readaloud": speak(reading&&reading.extract?reading.extract:""); break;
+    case "buildnew": startBuilder(); break;
+    case "buildreset": builder.placed=[]; builder.checked=null; render(); break;
+    case "place": { const t=builder.tiles[+el.dataset.k]; if(t && !builder.placed.some(x=>x.i===t.i)) builder.placed.push(t); render(); break; }
+    case "unplace": { if(builder.checked) break; builder.placed.splice(+el.dataset.k,1); render(); break; }
+    case "buildcheck": {
+      const ok=builder.placed.map(t=>t.p).join(" ")===builder.answer.join(" ");
+      builder.checked={ok};
+      if(ok) bumpStreak();
+      persist(); render(); break; }
     case "readtok": { const id=+el.dataset.id; if(id>=0) openWord(id); break; }
     case "testvoice": speak("Bonjour, je m'appelle Bard."); break;
     case "copybackup": {
